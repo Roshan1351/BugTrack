@@ -38,6 +38,10 @@ public class Bug {
     private String stepsToReproduce;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "raised_by", nullable = false)
+    private User raisedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_to")
     private User assignedTo;
 
