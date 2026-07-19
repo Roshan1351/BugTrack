@@ -39,9 +39,12 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive= true;
 
+    @Column(nullable = false, length = 255, name = "password_hash")
+    private String passwordHash;
 
     @PrePersist
     protected  void onCreate(){
         this.createdAt= LocalDateTime.now();
     }
+
 }
