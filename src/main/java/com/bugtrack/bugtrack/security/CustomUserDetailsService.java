@@ -29,5 +29,4 @@ public class CustomUserDetailsService {
                 List.of(new SimpleGrantedAuthority("ROLE_"+user.getRole().getRoleName()))
         );
     }
-
 }
