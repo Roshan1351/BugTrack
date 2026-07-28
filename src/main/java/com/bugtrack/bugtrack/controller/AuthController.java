@@ -6,7 +6,6 @@ import com.bugtrack.bugtrack.dto.response.AuthResponse;
 import com.bugtrack.bugtrack.service.Authservice;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

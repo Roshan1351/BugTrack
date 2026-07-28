@@ -1,6 +1,5 @@
 package com.bugtrack.bugtrack.repository;
 
-import com.bugtrack.bugtrack.entity.Bug;
 import com.bugtrack.bugtrack.entity.BugAttachment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
