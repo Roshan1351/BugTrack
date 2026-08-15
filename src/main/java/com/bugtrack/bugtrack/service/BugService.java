@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +57,7 @@ public class BugService {
         return mapToResponse(saved);
     }
 
-    public BugResponse mapToResponse(Bug bug) {
+    public BugResponse mapToResponse(Bug bug) { //map to response use for entity to DTO.
         return BugResponse.builder()
                 .bugId(bug.getBugId())
                 .title(bug.getTitle())
@@ -137,5 +139,68 @@ public class BugService {
         notification.setMessage(message);
         notification.setIsRead(false);
         notificationRepository.save(notification);
+    }
+    @Transactional
+    public BugResponse assignBug(Integer bugid, Integer developerId){
+        Bug bug= bugRepository.findById(bugid)
+                .orElseThrow(()-> new RuntimeException("Bug not found: "+ bugid));
+
+        User developer= userRepository.findById(developerId).orElseThrow(()-> new RuntimeException("Developer not found: "+ developerId));
+
+        BugStatus bugStatus= bugStatusRepository.findByStatusName("Assigned").orElseThrow(()-> new RuntimeException("Status not found"));
+
+        BugStatus oldStatus= bug.getStatus();
+        bug.setAssignedTo(developer);
+        bug.setStatus(bugStatus);
+
+        Bug updated= bugRepository.save(bug);
+
+        String email= SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User assignedBy= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User not found"));
+        logStatusHistory(updated, oldStatus, bugStatus, assignedBy, "Bug Assigned to "+ developer.getFullName());
+
+        sendNotification(developer, bug, "New bug assigned to you: "+ bug.getTitle());
+        return mapToResponse(updated);
+    }
+
+    public List<BugResponse> getBugsByProject(Integer projectId) { //getting all bugs by project name and project id.
+        return bugRepository.findByProject_ProjectId(projectId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<BugResponse> getMyAssignedBugs() { //for developer in which developer can see their own assigned bug list.
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        User developer = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+        return bugRepository
+                .findByAssignedTo_UserId(developer.getUserId())
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<BugResponse> getMyRaisedBugs() { //for Tester , see the tester see list of bug which is raised by self.
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        User tester = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+        return bugRepository
+                .findByRaisedBy_UserId(tester.getUserId())
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public BugResponse getBugById(Integer bugId){
+        Bug bug= bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found: "+ bugId));
+        return mapToResponse(bug);
     }
 }
