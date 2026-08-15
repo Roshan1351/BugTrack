@@ -17,12 +17,12 @@ public class Notification {
     @Column(name = "notification_id")
     private Integer notificationId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id",
             nullable = false)
     private User user;                     // Notification kis user ko jaayegi
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bug_id",
             nullable = false)
     private Bug bug;

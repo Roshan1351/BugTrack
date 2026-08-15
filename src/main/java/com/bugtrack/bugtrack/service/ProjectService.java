@@ -101,7 +101,7 @@ public class ProjectService {
 
     public List<ProjectMemberResponse> getProjectMembers(Integer projectId){
         List<ProjectAssignment> list= projectAssignmentRepository.findByProject_ProjectId(projectId);
-        List<ProjectMemberResponse> projectmember= list.stream().map(a->new ProjectMemberResponse(a.getAssignmentId(),a.getUser().getUserId(),a.getRoleInProject().name(),a.getUser().getEmail(), a.getUser().getFullName())).toList();
+        List<ProjectMemberResponse> projectmember= list.stream().map(a->new ProjectMemberResponse(a.getAssignmentId(),a.getUser().getUserId(),a.getUser().getFullName(),a.getUser().getEmail(), a.getRoleInProject().name())).toList();
 
         return projectmember;
     }

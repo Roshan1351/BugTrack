@@ -19,14 +19,14 @@ public class BugAttachment {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer attachmentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bug_id", nullable = false)
     private Bug bug;
 
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "uploaded_by", nullable = false)
     private User uploadedBy;
 

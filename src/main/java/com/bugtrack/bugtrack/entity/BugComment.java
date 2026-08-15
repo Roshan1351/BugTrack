@@ -17,12 +17,12 @@ public class BugComment {
     @Column(name = "comment_id")
     private Integer commentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bug_id",
             nullable = false)
     private Bug bug;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "commented_by",
             nullable = false)
     private User commentedBy;

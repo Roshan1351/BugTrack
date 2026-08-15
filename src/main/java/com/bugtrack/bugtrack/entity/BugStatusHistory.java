@@ -18,19 +18,19 @@ public class BugStatusHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer historyId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bug_id")
     private Bug bug;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "old_status_id")
     private BugStatus oldStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "new_status_id")
     private BugStatus newStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "changed_by")
     private User changedBy;
 

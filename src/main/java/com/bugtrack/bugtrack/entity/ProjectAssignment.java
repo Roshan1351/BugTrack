@@ -23,11 +23,11 @@ public class ProjectAssignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int assignmentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -35,7 +35,7 @@ public class ProjectAssignment {
     @Column(name = "role_in_project", nullable = false)
     private ProjectRole roleInProject;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "assigned_by", nullable = false)
     private User assignedBy;
 

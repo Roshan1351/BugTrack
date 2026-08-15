@@ -23,7 +23,7 @@ public class Bug {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer bugId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
@@ -36,11 +36,11 @@ public class Bug {
     @Column(name = "step_to_reproduce", columnDefinition = "TEXT")
     private String stepsToReproduce;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "raised_by", nullable = false)
     private User raisedBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "assigned_to")
     private User assignedTo;
 
