@@ -95,6 +95,7 @@ public class BugService {
         };
     }
 
+    @Transactional
     public BugResponse updateBugStatus(Integer BugId, UpdateBugStatusRequest request){
         Bug bug= bugRepository.findById(BugId).orElseThrow(()-> new RuntimeException("Bug not found: "+ BugId));
 
@@ -126,6 +127,15 @@ public class BugService {
         return mapToResponse(updated);
     }
 
-    private void sendNotification(User raisedBy, Bug bug, String s) {
+    private void sendNotification(User user, Bug bug, String message) {
+        if(user==null){
+            return;
+        }
+        Notification notification= new Notification();
+        notification.setUser(user);
+        notification.setBug(bug);
+        notification.setMessage(message);
+        notification.setIsRead(false);
+        notificationRepository.save(notification);
     }
 }
