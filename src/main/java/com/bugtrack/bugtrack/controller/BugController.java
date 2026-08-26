@@ -3,8 +3,10 @@ package com.bugtrack.bugtrack.controller;
 import com.bugtrack.bugtrack.dto.request.CreateBugRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateBugStatusRequest;
 import com.bugtrack.bugtrack.dto.response.BugResponse;
+import com.bugtrack.bugtrack.dto.response.DuplicateResult;
 import com.bugtrack.bugtrack.entity.Bug;
 import com.bugtrack.bugtrack.service.BugService;
+import com.bugtrack.bugtrack.service.DuplicateDetectionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -22,6 +24,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BugController {
     private final BugService bugService;
+    private final DuplicateDetectionService duplicateDetectionService;
+
 
     @PostMapping
     @PreAuthorize("hasRole('Tester')")
@@ -66,4 +70,16 @@ public class BugController {
     public ResponseEntity<BugResponse> getBugById(@PathVariable Integer bugId){
         return ResponseEntity.ok(bugService.getBugById(bugId));
     }
+
+    @GetMapping("/duplicate-check")
+    @PreAuthorize("hasRole('Tester')")
+    public ResponseEntity<?> checkduplicate(@RequestParam Integer projectId, @RequestParam String title){
+        List< DuplicateResult> results= duplicateDetectionService.findSimilarBugs(projectId, title);
+        if(results.isEmpty()){
+            return ResponseEntity.ok(java.util.Map.of("hasDuplicates", false, "Message", "No Similar bug found", "similarBugs", results));
+        }
+        return ResponseEntity.ok(java.util.Map.of("hasDuplicates", true, "message", results.size()+" similar bugs found. please review.", "Similar Bugs", results));
+    }
+
+
 }

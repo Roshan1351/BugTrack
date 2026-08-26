@@ -43,4 +43,5 @@ public interface BugRepository extends JpaRepository<Bug, Integer>  {
 
     @Query("select count(b) from Bug b where b.assignedTo.userId = :developerId and b.status.statusName = 'Reopened'")
     long countReoepenedBugsByDeveloper(@Param("developerId") Integer developerId);
+
 }

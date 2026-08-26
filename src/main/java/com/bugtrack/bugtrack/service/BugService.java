@@ -203,4 +203,5 @@ public class BugService {
         Bug bug= bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found: "+ bugId));
         return mapToResponse(bug);
     }
+
 }
