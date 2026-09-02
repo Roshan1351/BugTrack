@@ -3,6 +3,7 @@ package com.bugtrack.bugtrack.service;
 import com.bugtrack.bugtrack.dto.request.CreateBugRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateBugStatusRequest;
 import com.bugtrack.bugtrack.dto.response.BugResponse;
+import com.bugtrack.bugtrack.dto.response.DuplicateResult;
 import com.bugtrack.bugtrack.entity.*;
 import com.bugtrack.bugtrack.repository.*;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +29,8 @@ public class BugService {
     private final SeverityRepository severityRepository;
     private final BugStatusHistoryRepository historyRepository;
     private final NotificationRepository notificationRepository;
+    private final DuplicateDetectionService duplicateDetectionService;
+    private final AutoAssignmentService autoAssignmentService;
 
     @Transactional
     public BugResponse createBug(CreateBugRequest request){
@@ -41,6 +45,12 @@ public class BugService {
 
         Severity severity= severityRepository.findBySeverityName(request.getSeverityName()).orElseThrow(()->new RuntimeException("Severity not found: "+ request.getSeverityName()));
 
+        List<DuplicateResult> duplicateResult = duplicateDetectionService.findSimilarBugs(request.getProjectId(), request.getTitle());
+        if(!duplicateResult.isEmpty()){
+            System.out.println("Warning: "+ duplicateResult.size()+"similar bug found "+ request.getTitle());
+            duplicateResult.forEach(d-> System.out.println("  - "+d.getBug().getTitle()+" ("+d.getSimilarityPercent()+ "% similar"));
+        }
+
         Bug bug= new Bug();
         bug.setProject(project);
         bug.setTitle(request.getTitle());
@@ -53,6 +63,21 @@ public class BugService {
         bug.setDueDate(calculateDueDate(request.getPriorityName()));
 
         Bug saved= bugRepository.save(bug);
+        try{
+            User developer= autoAssignmentService.findLeastLoadedDeveloper(request.getProjectId());
+            BugStatus assignedStatus= bugStatusRepository.findByStatusName("Assigned").orElseThrow();
+            saved.setAssignedTo(developer);
+            saved.setStatus(assignedStatus);
+            saved= bugRepository.save(saved);
+
+            sendNotification(developer,saved,"new bug auto-assigned to You: "+ saved.getTitle());
+
+            logStatusHistory(saved,openStatus,assignedStatus,tester,"Auto-assigned to "+ developer.getFullName());
+
+            System.out.println("bug auto-assigned to: "+ developer.getFullName());
+        }catch (Exception e){
+            System.out.println("Auto-assigned failed: "+e.getMessage()+" -- Bug left as Open");
+        }
         logStatusHistory(saved, null, openStatus, tester, "Bug raised");
         return mapToResponse(saved);
     }

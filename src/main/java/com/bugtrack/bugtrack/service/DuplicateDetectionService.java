@@ -21,8 +21,8 @@ public class DuplicateDetectionService {
     @Autowired
     private StringSimilarityUtil stringSimilarityUtil;
 
-    @Autowired
-    private BugService bugService;
+//    @Autowired
+//    private BugService bugService;
 
     public static final double ThresholdValue= 70.0;
     public List<DuplicateResult> findSimilarBugs(Integer projectid, String newTitle){
@@ -31,11 +31,30 @@ public class DuplicateDetectionService {
         for(Bug existingBug: openBugs){
             double similarity= stringSimilarityUtil.similarpercentage(newTitle, existingBug.getTitle());
             if(similarity>=ThresholdValue){
-                similarBugs.add(new DuplicateResult(bugService.mapToResponse(existingBug), Math.round(similarity*10.0)/10.0)); //multiply and divide by 10 for round of 1 decimal value;
+                similarBugs.add(new DuplicateResult(mapToResponse(existingBug), Math.round(similarity*10.0)/10.0)); //multiply and divide by 10 for round of 1 decimal value;
             }
         }
         similarBugs.sort((a, b)->Double.compare(b.getSimilarityPercent(), a.getSimilarityPercent()));
         return similarBugs;
+    }
+
+    private BugResponse mapToResponse(Bug bug) {
+        return BugResponse.builder()
+                .bugId(bug.getBugId())
+                .title(bug.getTitle())
+                .description(bug.getDescription())
+                .projectName(bug.getProject().getProjectName())
+                .raisedBy(bug.getRaisedBy().getFullName())
+                .assignedTo(bug.getAssignedTo() != null
+                        ? bug.getAssignedTo().getFullName()
+                        : "Unassigned")
+                .status(bug.getStatus().getStatusName())
+                .priority(bug.getPriority().getPriorityName())
+                .severity(bug.getSeverity().getSeverityName())
+                .dueDate(bug.getDueDate())
+                .createdAt(bug.getCreatedAt())
+                .resolvedAt(bug.getResolvedAt())
+                .build();
     }
 }
 

@@ -16,7 +16,7 @@ public class StringSimilarityUtil {
             dp[i][0]= i;
         }
         for(int i= 0;i<=len2; i++){
-            dp[0][j]= j;
+            dp[0][i]= i;
         }
 
         for(int i= 1; i<=len1; i++){
