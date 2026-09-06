@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class AttachmentService {
     @Autowired
     private FileStorageService fileStorageService;
 
-
+    @Transactional
     public AttachmentResponse uploadAttachment(Integer bugId, MultipartFile file){
         fileStorageService.validateFile(file);
         Bug bug= bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found with id: "+ bugId));
