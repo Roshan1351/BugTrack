@@ -37,9 +37,19 @@ public class SecurityConfig {
         http.csrf(csrf->csrf.disable())
                 .cors(cors->cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth->auth
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(
+                                "/login.html",
+                                "/admin/**",
+                                "/developer/**",
+                                "/tester/**",
+                                "/favicon.ico",
+                                "/shared/**",
+                                "/api/auth/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session->session

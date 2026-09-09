@@ -53,13 +53,13 @@ public class BugController {
         return ResponseEntity.ok(bugService.getBugsByProject(projectId));
     }
 
-    @GetMapping("/my-assignedbug")
+    @GetMapping("/my-assigned")
     @PreAuthorize("hasRole('Developer')")
     public ResponseEntity<List<BugResponse>> getMyAssignedBugs(){ //list of bug which is assigned to developer
         return ResponseEntity.ok(bugService.getMyAssignedBugs());
     }
 
-    @GetMapping("/my-raisedBug")
+    @GetMapping("/my-raised")
     @PreAuthorize("hasRole('Tester')")
     public ResponseEntity<List<BugResponse>> getMyRaisedBugs(){
         return ResponseEntity.ok(bugService.getMyRaisedBugs());
