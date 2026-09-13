@@ -24,7 +24,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BugController {
     private final BugService bugService;
-    private final DuplicateDetectionService duplicateDetectionService;
 
 
     @PostMapping
@@ -65,6 +64,12 @@ public class BugController {
         return ResponseEntity.ok(bugService.getMyRaisedBugs());
     }
 
+    @GetMapping("/{bugId}/history")
+    @PreAuthorize("hasRole('Admin') or hasRole('Developer') or hasRole('Project Manager') or hasRole('Tester')")
+    public ResponseEntity<List<com.bugtrack.bugtrack.dto.response.BugHistoryResponse>> getBugHistory(@PathVariable Integer bugId){
+        return ResponseEntity.ok(bugService.getBugHistory(bugId));
+    }
+
     @GetMapping("/{bugId}")
     @PreAuthorize("hasRole('Admin') or hasRole('Developer') or hasRole('Project Manager') or hasRole('Tester')")
     public ResponseEntity<BugResponse> getBugById(@PathVariable Integer bugId){
@@ -74,11 +79,7 @@ public class BugController {
     @GetMapping("/duplicate-check")
     @PreAuthorize("hasRole('Tester')")
     public ResponseEntity<?> checkduplicate(@RequestParam Integer projectId, @RequestParam String title){
-        List< DuplicateResult> results= duplicateDetectionService.findSimilarBugs(projectId, title);
-        if(results.isEmpty()){
-            return ResponseEntity.ok(java.util.Map.of("hasDuplicates", false, "Message", "No Similar bug found", "similarBugs", results));
-        }
-        return ResponseEntity.ok(java.util.Map.of("hasDuplicates", true, "message", results.size()+" similar bugs found. please review.", "Similar Bugs", results));
+        return ResponseEntity.ok(bugService.checkDuplicates(projectId, title));
     }
 
 

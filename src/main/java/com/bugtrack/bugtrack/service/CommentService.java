@@ -27,6 +27,7 @@ public class CommentService {
     private final BugRepository bugRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final ProjectAccessService projectAccessService;
 
     @Transactional
     public CommentResponse addComment(Integer bugid, CreateCommentRequest request){
@@ -34,6 +35,7 @@ public class CommentService {
         User user= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User not found"));
 
         Bug bug= bugRepository.findById(bugid).orElseThrow(()->new RuntimeException("Bug not found with id: "+ bugid));
+        projectAccessService.requireBugAccess(bug);
 
         BugComment bugcomment= new BugComment();
         bugcomment.setBug(bug);
@@ -82,8 +84,8 @@ public class CommentService {
     }
 
     public List<CommentResponse> getCommentsByBugs(Integer bugId) {
-
-        bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found with id: "+ bugId));
+        Bug bug = bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found with id: "+ bugId));
+        projectAccessService.requireBugAccess(bug);
         return bugCommentRepository.findByBug_BugIdOrderByCreatedAtAsc(bugId).stream().map(this::maptoResponse).collect(Collectors.toList());
     }
 

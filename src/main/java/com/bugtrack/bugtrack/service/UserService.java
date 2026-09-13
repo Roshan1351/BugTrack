@@ -1,6 +1,7 @@
 package com.bugtrack.bugtrack.service;
 
 import com.bugtrack.bugtrack.dto.request.CreateUserRequest;
+import com.bugtrack.bugtrack.dto.request.ResetPasswordRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateUserRequest;
 import com.bugtrack.bugtrack.dto.response.UserResponse;
 import com.bugtrack.bugtrack.entity.Role;
@@ -60,7 +61,9 @@ public class UserService {
     }
 
     public List<UserResponse> getUserByRole(String role){
-        return userRepository.findByRole_RoleName(role).stream().map(this::mapToResponse)
+        return userRepository.findByRole_RoleName(role).stream()
+                .filter(user -> Boolean.TRUE.equals(user.getIsActive()))
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
@@ -85,7 +88,29 @@ public class UserService {
     public void deactivateUser(Integer id){
         User user= userRepository.findById(id).orElseThrow(()->
                 new RuntimeException("user not found: "+ id));
+        String roleName = user.getRole().getRoleName();
+        if ("Admin".equals(roleName) || "Project Manager".equals(roleName)) {
+            throw new RuntimeException("Admin and Project Manager accounts cannot be deactivated");
+        }
         user.setIsActive(false);
+        userRepository.save(user);
+    }
+
+    public UserResponse activateUser(Integer id) {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new RuntimeException("user not found: " + id));
+        user.setIsActive(true);
+        return mapToResponse(userRepository.save(user));
+    }
+
+    public void resetPassword(Integer id, ResetPasswordRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new RuntimeException("user not found: " + id));
+        String roleName = user.getRole().getRoleName();
+        if ("Admin".equals(roleName) || "Project Manager".equals(roleName)) {
+            throw new RuntimeException("Cannot reset Admin or Project Manager password from here");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 }

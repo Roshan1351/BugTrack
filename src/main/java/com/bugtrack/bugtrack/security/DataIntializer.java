@@ -36,19 +36,16 @@ public class DataIntializer implements CommandLineRunner {
             ));
             System.out.println("Role inserted");
         }
-        if(bugStatusRepository.count()==0){
-            bugStatusRepository.saveAll(List.of(
-                    new BugStatus(null, "Open"),
-                    new BugStatus(null, "Assigned"),
-                    new BugStatus(null, "In Progress"),
-                    new BugStatus(null, "Resolved"),
-                    new BugStatus(null, "Re-Testing"),
-                    new BugStatus(null, "Closed"),
-                    new BugStatus(null, "Reopened"),
-                    new BugStatus(null, "Rejected")
-            ));
-            System.out.println("Bug Statuses inserted");
-        }
+        List.of(
+                "Open",
+                "Assigned",
+                "In Progress",
+                "Resolved",
+                "Re-Testing",
+                "Closed",
+                "Reopened",
+                "Rejected"
+        ).forEach(this::ensureStatus);
 
         if(priorityRepository.count()==0){
             priorityRepository.saveAll(List.of(
@@ -67,6 +64,13 @@ public class DataIntializer implements CommandLineRunner {
                     new Severity(null, "Blocker")
             ));
             System.out.println("✅ Severities inserted");
+        }
+    }
+
+    private void ensureStatus(String statusName) {
+        if (bugStatusRepository.findByStatusName(statusName).isEmpty()) {
+            bugStatusRepository.save(new BugStatus(null, statusName));
+            System.out.println("Bug status added: " + statusName);
         }
     }
 }

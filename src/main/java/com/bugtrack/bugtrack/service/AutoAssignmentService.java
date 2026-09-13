@@ -28,6 +28,9 @@ public class AutoAssignmentService {
         long minBugcount= Long.MAX_VALUE;
         for(ProjectAssignment assignment: developers){
             User developer= assignment.getUser();
+            if (!Boolean.TRUE.equals(developer.getIsActive())) {
+                continue;
+            }
             long bugCount= 0;
 
             for(Object[] workload: workloads){
@@ -42,6 +45,9 @@ public class AutoAssignmentService {
                 minBugcount= bugCount;
                 leastLoadedDeveloper= developer;
             }
+        }
+        if (leastLoadedDeveloper == null) {
+            throw new RuntimeException("No active developers assigned to project: " + projectId);
         }
         System.out.println("Auto-assigned to : "+ leastLoadedDeveloper.getFullName()+" (current bugs: "+ minBugcount+" )");
         return leastLoadedDeveloper;

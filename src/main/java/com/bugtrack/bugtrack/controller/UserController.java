@@ -1,6 +1,7 @@
 package com.bugtrack.bugtrack.controller;
 
 import com.bugtrack.bugtrack.dto.request.CreateUserRequest;
+import com.bugtrack.bugtrack.dto.request.ResetPasswordRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateUserRequest;
 import com.bugtrack.bugtrack.dto.response.UserResponse;
 import com.bugtrack.bugtrack.service.UserService;
@@ -55,5 +56,24 @@ public class UserController {
     public ResponseEntity<String> deactivateUser(@PathVariable Integer id){
         userService.deactivateUser(id);
         return ResponseEntity.ok("user deactivate successfully");
+    }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<UserResponse> activateUser(
+            @PathVariable Integer id) {
+
+        return ResponseEntity.ok(userService.activateUser(id));
+    }
+
+    @PatchMapping("/{id}/reset-password")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<String> resetPassword(
+            @PathVariable Integer id,
+            @RequestBody ResetPasswordRequest request) {
+
+        userService.resetPassword(id, request);
+
+        return ResponseEntity.ok("Password reset successfully");
     }
 }

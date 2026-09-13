@@ -42,13 +42,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(
+                                "/",
+                                "/index.html",
                                 "/login.html",
+                                "/css/**",
+                                "/js/**",
                                 "/admin/**",
                                 "/developer/**",
                                 "/tester/**",
                                 "/favicon.ico",
                                 "/shared/**",
-                                "/api/auth/**"
+                                "/api/auth/**",
+                                "/images/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -31,6 +31,7 @@ public class BugService {
     private final NotificationRepository notificationRepository;
     private final DuplicateDetectionService duplicateDetectionService;
     private final AutoAssignmentService autoAssignmentService;
+    private final ProjectAccessService projectAccessService;
 
     @Transactional
     public BugResponse createBug(CreateBugRequest request){
@@ -38,6 +39,7 @@ public class BugService {
         User tester= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User not found"));
 
         Project project= projectRepository.findById(request.getProjectId()).orElseThrow(()->new RuntimeException("Project not found"));
+        projectAccessService.requireProjectAccess(project.getProjectId());
 
         BugStatus openStatus= bugStatusRepository.findByStatusName("Open").orElseThrow(()->new RuntimeException("Status not found"));
 
@@ -88,10 +90,13 @@ public class BugService {
                 .title(bug.getTitle())
                 .description(bug.getDescription())
                 .stepsToReproduce(bug.getStepsToReproduce())
+                .projectId(bug.getProject() != null ? bug.getProject().getProjectId() : null)
                 .projectName(bug.getProject().getProjectName())
                 .raisedBy(bug.getRaisedBy().getFullName())
                 .assignedTo(bug.getAssignedTo() != null
                         ? bug.getAssignedTo().getFullName() : "Unassigned")
+                .assignedToEmail(bug.getAssignedTo() != null ? bug.getAssignedTo().getEmail() : null)
+                .assignedToUserId(bug.getAssignedTo() != null ? bug.getAssignedTo().getUserId() : null)
                 .status(bug.getStatus().getStatusName())
                 .priority(bug.getPriority().getPriorityName())
                 .severity(bug.getSeverity().getSeverityName())
@@ -125,9 +130,18 @@ public class BugService {
     @Transactional
     public BugResponse updateBugStatus(Integer BugId, UpdateBugStatusRequest request){
         Bug bug= bugRepository.findById(BugId).orElseThrow(()-> new RuntimeException("Bug not found: "+ BugId));
+        projectAccessService.requireBugAccess(bug);
 
-        BugStatus newStatus= bugStatusRepository.findByStatusName(request.getStatusName()).orElseThrow(()->
-                new RuntimeException("Status not found: "+ request.getStatusName()));
+        String email= SecurityContextHolder.getContext().getAuthentication().getName();
+        User changedBy= userRepository.findByEmail(email)
+                .orElseThrow(()->new RuntimeException("User not found"));
+        if ("Developer".equals(changedBy.getRole().getRoleName())) {
+            if (bug.getAssignedTo() == null || !bug.getAssignedTo().getUserId().equals(changedBy.getUserId())) {
+                throw new RuntimeException("Only the assigned developer can change this bug status");
+            }
+        }
+
+        BugStatus newStatus = resolveStatus(request.getStatusName());
 
         BugStatus oldStatus = bug.getStatus();
 
@@ -145,10 +159,6 @@ public class BugService {
         }
         bug.setStatus(newStatus);
         Bug updated = bugRepository.save(bug);
-
-        String email= SecurityContextHolder.getContext().getAuthentication().getName();
-        User changedBy= userRepository.findByEmail(email)
-                .orElseThrow(()->new RuntimeException("User not found"));
 
         logStatusHistory(updated, oldStatus, newStatus, changedBy, request.getRemark());
         return mapToResponse(updated);
@@ -171,6 +181,12 @@ public class BugService {
                 .orElseThrow(()-> new RuntimeException("Bug not found: "+ bugid));
 
         User developer= userRepository.findById(developerId).orElseThrow(()-> new RuntimeException("Developer not found: "+ developerId));
+        if (!Boolean.TRUE.equals(developer.getIsActive())) {
+            throw new RuntimeException("Cannot assign work to a deactivated user");
+        }
+        if (!"Developer".equals(developer.getRole().getRoleName())) {
+            throw new RuntimeException("Selected user is not a Developer");
+        }
 
         BugStatus bugStatus= bugStatusRepository.findByStatusName("Assigned").orElseThrow(()-> new RuntimeException("Status not found"));
 
@@ -190,6 +206,7 @@ public class BugService {
     }
 
     public List<BugResponse> getBugsByProject(Integer projectId) { //getting all bugs by project name and project id.
+        projectAccessService.requireProjectAccess(projectId);
         return bugRepository.findByProject_ProjectId(projectId)
                 .stream()
                 .map(this::mapToResponse)
@@ -226,7 +243,60 @@ public class BugService {
 
     public BugResponse getBugById(Integer bugId){
         Bug bug= bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found: "+ bugId));
+        projectAccessService.requireBugAccess(bug);
         return mapToResponse(bug);
+    }
+
+    public java.util.Map<String, Object> checkDuplicates(Integer projectId, String title) {
+        projectAccessService.requireProjectAccess(projectId);
+        List<DuplicateResult> results = duplicateDetectionService.findSimilarBugs(projectId, title);
+        if (results.isEmpty()) {
+            return java.util.Map.of("hasDuplicates", false, "message", "No Similar bug found", "similarBugs", results);
+        }
+        return java.util.Map.of(
+                "hasDuplicates", true,
+                "message", results.size() + " similar bugs found. please review.",
+                "similarBugs", results
+        );
+    }
+
+    public List<com.bugtrack.bugtrack.dto.response.BugHistoryResponse> getBugHistory(Integer bugId) {
+        Bug bug = bugRepository.findById(bugId)
+                .orElseThrow(() -> new RuntimeException("Bug not found: " + bugId));
+        projectAccessService.requireBugAccess(bug);
+        return historyRepository.findByBug_BugIdOrderByChangedAtAsc(bugId)
+                .stream()
+                .map(this::mapHistory)
+                .collect(Collectors.toList());
+    }
+
+    private com.bugtrack.bugtrack.dto.response.BugHistoryResponse mapHistory(BugStatusHistory history) {
+        return new com.bugtrack.bugtrack.dto.response.BugHistoryResponse(
+                history.getHistoryId(),
+                history.getOldStatus() != null ? history.getOldStatus().getStatusName() : "-",
+                history.getNewStatus() != null ? history.getNewStatus().getStatusName() : "-",
+                history.getChangedBy() != null ? history.getChangedBy().getFullName() : "System",
+                history.getRemarks(),
+                history.getChangedAt()
+        );
+    }
+
+    private BugStatus resolveStatus(String statusName) {
+        if (statusName == null || statusName.isBlank()) {
+            throw new RuntimeException("Status is required");
+        }
+        String trimmed = statusName.trim();
+        return bugStatusRepository.findByStatusName(trimmed)
+                .or(() -> bugStatusRepository.findByStatusName(mapStatusAlias(trimmed)))
+                .orElseThrow(() -> new RuntimeException("Status not found: " + trimmed));
+    }
+
+    private String mapStatusAlias(String statusName) {
+        return switch (statusName.toLowerCase().replace(" ", "").replace("_", "").replace("-", "")) {
+            case "retesting" -> "Re-Testing";
+            case "inprogress" -> "In Progress";
+            default -> statusName;
+        };
     }
 
 }

@@ -29,11 +29,14 @@ public class AttachmentService {
     private UserRepository userRepository;
     @Autowired
     private FileStorageService fileStorageService;
+    @Autowired
+    private ProjectAccessService projectAccessService;
 
     @Transactional
     public AttachmentResponse uploadAttachment(Integer bugId, MultipartFile file){
         fileStorageService.validateFile(file);
         Bug bug= bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found with id: "+ bugId));
+        projectAccessService.requireBugAccess(bug);
 
         String email= SecurityContextHolder.getContext().getAuthentication().getName();
         User user= userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("User not found"));
@@ -49,13 +52,31 @@ public class AttachmentService {
     }
 
     private AttachmentResponse mapToResponse(BugAttachment saved) {
-        return AttachmentResponse.builder().attachmentId(saved.getAttachmentId()).bugId(saved.getBug().getBugId()).fileUrl(saved.getFileUrl())
+        return AttachmentResponse.builder().attachmentId(saved.getAttachmentId()).bugId(saved.getBug().getBugId()).fileUrl(toWebUrl(saved.getFileUrl()))
                 .uploadedBy(saved.getUploadedBy().getFullName())
                 .uploadedAt(saved.getUploadedAt()).build();
     }
 
+    private String toWebUrl(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) {
+            return fileUrl;
+        }
+        String url = fileUrl.replace("\\", "/");
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        if (url.contains("/admin/uploads/")) {
+            url = url.substring(url.indexOf("/admin/uploads/") + "/admin".length());
+        }
+        if (!url.startsWith("/")) {
+            url = "/" + url.replaceAll("^/+", "");
+        }
+        return url;
+    }
+
     public List<AttachmentResponse> getAttachments(Integer bugId){
-        bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found with id: "+ bugId));
+        Bug bug = bugRepository.findById(bugId).orElseThrow(()->new RuntimeException("Bug not found with id: "+ bugId));
+        projectAccessService.requireBugAccess(bug);
         return bugAttachmentRepository.findByBug_BugId(bugId).stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 }

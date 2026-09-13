@@ -30,6 +30,9 @@ public class ProjectService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ProjectAccessService projectAccessService;
+
 
     //create project
     @Transactional
@@ -50,14 +53,30 @@ public class ProjectService {
     }
 
     public List<ProjectResponse> getAllProjects(){
-        return projectRepository.findAllWithCreatedBy()
+        User user = projectAccessService.currentUser();
+        if (projectAccessService.isPrivileged(user)) {
+            return projectRepository.findAllWithCreatedBy()
+                    .stream()
+                    .map(this::maptoResponse)
+                    .collect(Collectors.toList());
+        }
+        return projectAssignmentRepository.findByUser_userId(user.getUserId())
                 .stream()
-                .map(this::maptoResponse)
+                .map(assignment -> maptoResponse(assignment.getProject()))
+                .collect(Collectors.toMap(
+                        ProjectResponse::getProjectId,
+                        project -> project,
+                        (first, ignored) -> first,
+                        java.util.LinkedHashMap::new
+                ))
+                .values()
+                .stream()
                 .collect(Collectors.toList());
     }
 
     //fetch project by project id
     public ProjectResponse getProjectById(Integer projectId){
+        projectAccessService.requireProjectAccess(projectId);
         Project project= projectRepository.findByIdWithCreatedBy(projectId).orElseThrow(()->new RuntimeException("Project not found: "+ projectId));
         return maptoResponse(project);
     }
@@ -100,6 +119,7 @@ public class ProjectService {
     }
 
     public List<ProjectMemberResponse> getProjectMembers(Integer projectId){
+        projectAccessService.requireProjectAccess(projectId);
         List<ProjectAssignment> list= projectAssignmentRepository.findByProject_ProjectId(projectId);
         List<ProjectMemberResponse> projectmember= list.stream().map(a->new ProjectMemberResponse(a.getAssignmentId(),a.getUser().getUserId(),a.getUser().getFullName(),a.getUser().getEmail(), a.getRoleInProject().name())).toList();
 
@@ -120,7 +140,7 @@ public class ProjectService {
                 project.getProjectName(),
                 project.getDescription(),
                 project.getStatus().name(),
-                project.getCreatedBy().getFullName(),
+                project.getCreatedBy() != null ? project.getCreatedBy().getFullName() : "System",
                 project.getCreatedAt()
         );
     }

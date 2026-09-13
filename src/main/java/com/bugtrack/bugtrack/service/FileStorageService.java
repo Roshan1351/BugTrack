@@ -35,7 +35,8 @@ public class FileStorageService {
 
             Path filePath= uploadPath.resolve(uniqueFileName);
             Files.copy(file.getInputStream(),filePath, StandardCopyOption.REPLACE_EXISTING);
-            return uploadDir+"/"+uniqueFileName;
+            String webPath = "/" + uploadDir.replace("\\", "/").replaceAll("^/+", "") + "/" + uniqueFileName;
+            return webPath;
         }catch(IOException e){
             throw new RuntimeException("File upload failed"+ e.getMessage());
         }

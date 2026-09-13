@@ -17,8 +17,11 @@ public class BugResponse {
     private String description;
     private String stepsToReproduce;
     private String projectName;
+    private Integer projectId;
     private String raisedBy;
     private String assignedTo;
+    private String assignedToEmail;
+    private Integer assignedToUserId;
     private String status;
     private String priority;
     private String severity;
