@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Details — BugTrack</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/images/BugTrack_Logo.png">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body data-page-title="Bug Details">
+    <div class="main-wrapper">
+        <div id="sidebar" class="sidebar"></div>
+        <div class="flex-grow-1 d-flex flex-column">
+            <div id="topnav"></div>
+            <div class="content-area">
+                <a href="/developer/bugs.html" class="btn btn-sm btn-light mb-3"><i class="bi bi-arrow-left"></i> Back</a>
+                <h4 id="pageTitle" class="mb-1">Bug Details</h4>
+                <h5 id="bugTitle" class="text-muted mb-4"></h5>
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="card-panel mb-4"><div class="card-body" id="bugDetailsBody">Loading...</div></div>
+                        <div class="card-panel">
+                            <div class="card-header"><h6 class="mb-0">Comments</h6></div>
+                            <div class="card-body">
+                                <div id="commentsList" class="d-flex flex-column gap-3 mb-4"></div>
+                                <form id="addCommentForm" class="border-top pt-3">
+                                    <textarea class="form-control mb-2" id="commentText" rows="3" required></textarea>
+                                    <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card-panel mb-4">
+                            <div class="card-header"><h6 class="mb-0">Update Status</h6></div>
+                            <div class="card-body">
+                                <p class="small text-muted">Move bug through Assigned → In Progress → Resolved.</p>
+                                <form id="updateStatusForm">
+                                    <select class="form-select form-select-sm mb-3" id="newStatus" required></select>
+                                    <textarea class="form-control form-control-sm mb-3" id="statusRemarks" rows="2" placeholder="Fix notes"></textarea>
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">Update Status</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card-panel mb-4">
+                            <div class="card-header"><h6 class="mb-0">Upload Attachment</h6></div>
+                            <div class="card-body">
+                                <form id="uploadForm">
+                                    <input type="file" class="form-control form-control-sm mb-2" id="fixAttachment" accept="image/*,.pdf">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Upload</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card-panel">
+                            <div class="card-header"><h6 class="mb-0">History</h6></div>
+                            <div class="card-body"><div class="timeline" id="historyTimeline"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/bug-details.js"></script>
+    <script>
+        auth.requireRole(['Developer']);
+        bugDetailsPage.init();
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('fixAttachment').files[0];
+            if (!file) return;
+            const bugId = new URLSearchParams(window.location.search).get('id');
+            const fd = new FormData();
+            fd.append('file', file);
+            try {
+                await api.post(`/bugs/${bugId}/attachments`, fd);
+                utils.showToast('Attachment uploaded');
+                document.getElementById('fixAttachment').value = '';
+                bugDetailsPage.loadAttachments();
+            } catch (err) {
+                utils.showToast(err.message, 'danger');
+            }
+        });
+    </script>
+</body>
+</html>

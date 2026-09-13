@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/images/BugTrack_Logo.png">
+    <title>BugTrack</title>
+    <script>
+        if (localStorage.getItem('token')) {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const role = user.role;
+            if (role === 'Admin' || role === 'Project Manager') window.location.href = '/admin/dashboard.html';
+            else if (role === 'Tester') window.location.href = '/tester/dashboard.html';
+            else if (role === 'Developer') window.location.href = '/developer/dashboard.html';
+            else window.location.href = '/login.html';
+        } else {
+            window.location.href = '/login.html';
+        }
+    </script>
+</head>
+<body></body>
+</html>
