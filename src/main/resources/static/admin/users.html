@@ -94,7 +94,18 @@
                         <td>${utils.escapeHtml(u.email)}</td>
                         <td><span class="badge bg-secondary">${utils.escapeHtml(u.roleName)}</span></td>
                         <td>${u.isActive ? '<span class="text-success">Active</span>' : '<span class="text-danger">Inactive</span>'}</td>
-                        <td>${u.isActive ? `<button class="btn btn-sm btn-outline-danger" onclick="deactivateUser(${u.userId})">Deactivate</button>` : ''}</td>
+                        <td>
+                            ${u.isActive
+                                ? `<button class="btn btn-sm btn-outline-danger"
+                                        onclick="deactivateUser(${u.userId})">
+                                    <i class="bi bi-person-x"></i> Deactivate
+                                </button>`
+                            : `<button class="btn btn-sm btn-outline-success"
+                                        onclick="activateUser(${u.userId})">
+                                    <i class="bi bi-person-check"></i> Activate
+                            </button>`
+                            }
+                        </td>
                     </tr>`).join('');
             } catch (err) {
                 list.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-4">${utils.escapeHtml(err.message)}</td></tr>`;
@@ -106,6 +117,17 @@
             try {
                 await api.delete(`/users/${id}`);
                 utils.showToast('User deactivated');
+                loadUsers();
+            } catch (err) {
+                utils.showToast(err.message, 'danger');
+            }
+        };
+
+        window.activateUser = async (id) => {
+            if (!confirm('Activate this user?')) return;
+            try {
+                await api.patch(`/users/${id}/activate`);
+                utils.showToast('User activated successfully!');
                 loadUsers();
             } catch (err) {
                 utils.showToast(err.message, 'danger');
