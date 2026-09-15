@@ -4,6 +4,7 @@ import com.bugtrack.bugtrack.dto.request.CreateBugRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateBugStatusRequest;
 import com.bugtrack.bugtrack.dto.response.BugResponse;
 import com.bugtrack.bugtrack.dto.response.DuplicateResult;
+import com.bugtrack.bugtrack.dto.response.UserWorkloadResponse;
 import com.bugtrack.bugtrack.entity.*;
 import com.bugtrack.bugtrack.repository.*;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLOutput;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -298,5 +301,4 @@ public class BugService {
             default -> statusName;
         };
     }
-
 }

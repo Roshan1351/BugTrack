@@ -4,6 +4,7 @@ import com.bugtrack.bugtrack.dto.request.CreateUserRequest;
 import com.bugtrack.bugtrack.dto.request.ResetPasswordRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateUserRequest;
 import com.bugtrack.bugtrack.dto.response.UserResponse;
+import com.bugtrack.bugtrack.dto.response.UserWorkloadResponse;
 import com.bugtrack.bugtrack.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,5 +76,11 @@ public class UserController {
         userService.resetPassword(id, request);
 
         return ResponseEntity.ok("Password reset successfully");
+    }
+
+    @GetMapping("/workload")
+    @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')")
+    public ResponseEntity<List<UserWorkloadResponse>> getAllUsersWorkload() {
+        return ResponseEntity.ok(userService.getAllUsersWorkload());
     }
 }

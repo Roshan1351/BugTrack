@@ -4,9 +4,8 @@ import com.bugtrack.bugtrack.entity.Bug;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 public interface BugRepository extends JpaRepository<Bug, Integer>  {
     List<Bug> findByProject_ProjectId(Integer ProjectId);
@@ -44,4 +43,25 @@ public interface BugRepository extends JpaRepository<Bug, Integer>  {
     @Query("select count(b) from Bug b where b.assignedTo.userId = :developerId and b.status.statusName = 'Reopened'")
     long countReoepenedBugsByDeveloper(@Param("developerId") Integer developerId);
 
+
+    // Total bugs assigned to a developer (sabhi statuses)
+    long countByAssignedTo_UserId(Integer userId);
+
+    // Active bugs — jo abhi resolve/close nahi hue
+    @Query("SELECT COUNT(b) FROM Bug b WHERE b.assignedTo.userId = :userId " +
+            "AND b.status.statusName NOT IN ('Resolved', 'Closed', 'Rejected')")
+    long countActiveBugsByDeveloper(@Param("userId") Integer userId);
+
+    // Completed bugs — Resolved + Closed
+    @Query("SELECT COUNT(b) FROM Bug b WHERE b.assignedTo.userId = :userId " +
+            "AND b.status.statusName IN ('Resolved', 'Closed')")
+    long countCompletedBugsByDeveloper(@Param("userId") Integer userId);
+
+    // All users workload ek saath — JPQL bulk query
+    @Query("SELECT b.assignedTo.userId, " +
+            "COUNT(b), " +
+            "SUM(CASE WHEN b.status.statusName NOT IN ('Resolved','Closed','Rejected') THEN 1 ELSE 0 END), " +
+            "SUM(CASE WHEN b.status.statusName IN ('Resolved','Closed') THEN 1 ELSE 0 END) " +
+            "FROM Bug b WHERE b.assignedTo IS NOT NULL GROUP BY b.assignedTo.userId")
+    List<Object[]> findAllUserWorkloadStats();
 }

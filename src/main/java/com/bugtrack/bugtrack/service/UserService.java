@@ -4,8 +4,10 @@ import com.bugtrack.bugtrack.dto.request.CreateUserRequest;
 import com.bugtrack.bugtrack.dto.request.ResetPasswordRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateUserRequest;
 import com.bugtrack.bugtrack.dto.response.UserResponse;
+import com.bugtrack.bugtrack.dto.response.UserWorkloadResponse;
 import com.bugtrack.bugtrack.entity.Role;
 import com.bugtrack.bugtrack.entity.User;
+import com.bugtrack.bugtrack.repository.BugRepository;
 import com.bugtrack.bugtrack.repository.RoleRepository;
 import com.bugtrack.bugtrack.repository.UserRepository;
 import io.jsonwebtoken.security.Password;
@@ -16,7 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +31,7 @@ public class UserService {
 
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final BugRepository bugRepository;
 
     private UserResponse mapToResponse(User user) {
         return new UserResponse(
@@ -112,5 +117,37 @@ public class UserService {
         }
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    // Admin workload table ke liye — sabhi users ka bug summary
+    public List<UserWorkloadResponse> getAllUsersWorkload() {
+        List<User> users = userRepository.findAll();
+
+        // Bulk query se ek baar mein sabka data lo — N+1 problem avoid karo
+        List<Object[]> workloadStats = bugRepository.findAllUserWorkloadStats();
+
+        // userId -> [total, active, completed] map banao
+        Map<Integer, long[]> statsMap = new HashMap<>();
+        for (Object[] row : workloadStats) {
+            Integer uid    = (Integer) row[0];
+            long total     = ((Number) row[1]).longValue();
+            long active    = ((Number) row[2]).longValue();
+            long completed = ((Number) row[3]).longValue();
+            statsMap.put(uid, new long[]{total, active, completed});
+        }
+
+        return users.stream().map(user -> {
+            long[] stats = statsMap.getOrDefault(user.getUserId(), new long[]{0, 0, 0});
+            return UserWorkloadResponse.builder()
+                    .userId(user.getUserId())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .role(user.getRole().getRoleName())
+                    .isActive(user.getIsActive())
+                    .totalBugs(stats[0])
+                    .activeBugs(stats[1])
+                    .completedBugs(stats[2])
+                    .build();
+        }).collect(Collectors.toList());
     }
 }

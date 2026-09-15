@@ -4,6 +4,7 @@ import com.bugtrack.bugtrack.dto.request.CreateBugRequest;
 import com.bugtrack.bugtrack.dto.request.UpdateBugStatusRequest;
 import com.bugtrack.bugtrack.dto.response.BugResponse;
 import com.bugtrack.bugtrack.dto.response.DuplicateResult;
+import com.bugtrack.bugtrack.dto.response.UserWorkloadResponse;
 import com.bugtrack.bugtrack.entity.Bug;
 import com.bugtrack.bugtrack.service.BugService;
 import com.bugtrack.bugtrack.service.DuplicateDetectionService;
@@ -24,7 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BugController {
     private final BugService bugService;
-
 
     @PostMapping
     @PreAuthorize("hasRole('Tester')")

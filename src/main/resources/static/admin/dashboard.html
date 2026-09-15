@@ -98,6 +98,57 @@
                         </div>
                     </div>
                 </div>
+                <!-- Team Workload Table -->
+                <div class="row g-4 mt-1">
+                    <div class="col-12">
+                        <div class="card-panel">
+                            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h6 class="mb-0">Team Workload Overview</h6>
+                                    <p class="text-muted mb-0" style="font-size:0.78rem;">Bug distribution across all team members</p>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="text" id="workloadSearch" class="form-control form-control-sm"
+                                           placeholder="Search member..." style="width:180px" oninput="filterWorkloadTable()">
+                                    <select id="workloadRoleFilter" class="form-select form-select-sm" style="width:150px"
+                                            onchange="filterWorkloadTable()">
+                                        <option value="">All Roles</option>
+                                        <option value="Developer">Developer</option>
+                                        <option value="Tester">Tester</option>
+                                        <option value="Project Manager">Project Manager</option>
+                                        <option value="Admin">Admin</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" id="workloadTable">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th style="width:30px">#</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th class="text-center">Total Bugs</th>
+                                        <th class="text-center">Active Bugs</th>
+                                        <th class="text-center">Completed</th>
+                                        <th style="min-width:160px">Workload Bar</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="workloadTableBody">
+                                    <tr><td colspan="8" class="text-center py-4 text-muted">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading...
+                                    </td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="px-3 py-2 border-top d-flex gap-4" style="font-size:0.75rem;background:#f8f9fa;">
+                                <span><span class="badge bg-warning text-dark me-1">●</span>Active</span>
+                                <span><span class="badge bg-success me-1">●</span>Completed</span>
+                                <span><span class="badge bg-secondary me-1">●</span>No bugs</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -111,6 +162,82 @@
     <script src="/js/export.js"></script>
     <script>
         auth.requireRole(['Admin', 'Project Manager']);
+
+        // --- Workload Table ---
+let _workloadData = [];
+
+function getRoleBadge(role) {
+    const map = {
+        'Admin':           'bg-danger',
+        'Project Manager': 'bg-primary',
+        'Developer':       'bg-info text-dark',
+        'Tester':          'bg-secondary'
+    };
+    return `<span class="badge ${map[role] || 'bg-dark'}">${role}</span>`;
+}
+
+function getWorkloadBar(active, completed, total) {
+    if (total === 0) return '<span class="text-muted" style="font-size:0.78rem">No bugs</span>';
+    const activeW = Math.round((active / total) * 100);
+    const doneW   = Math.round((completed / total) * 100);
+    return `
+        <div style="height:10px;background:#e9ecef;border-radius:6px;overflow:hidden;display:flex;">
+            <div style="width:${activeW}%;background:#f59e0b;" title="Active: ${active}"></div>
+            <div style="width:${doneW}%;background:#10b981;" title="Completed: ${completed}"></div>
+        </div>
+        <div style="font-size:0.7rem;color:#6c757d;margin-top:2px;">${active} active · ${completed} done</div>`;
+}
+
+function renderWorkloadTable(data) {
+    const tbody = document.getElementById('workloadTableBody');
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No members found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map((u, i) => `
+        <tr>
+            <td class="text-muted" style="font-size:0.8rem">${i + 1}</td>
+            <td>
+                <div class="fw-medium">${utils.escapeHtml(u.fullName)}</div>
+                <div style="font-size:0.75rem;color:#6c757d;">${utils.escapeHtml(u.email)}</div>
+            </td>
+            <td>${getRoleBadge(u.role)}</td>
+            <td class="text-center fw-bold">${u.totalBugs}</td>
+            <td class="text-center">
+                <span class="fw-semibold ${u.activeBugs > 0 ? 'text-warning' : 'text-muted'}">${u.activeBugs}</span>
+            </td>
+            <td class="text-center">
+                <span class="fw-semibold ${u.completedBugs > 0 ? 'text-success' : 'text-muted'}">${u.completedBugs}</span>
+            </td>
+            <td>${getWorkloadBar(u.activeBugs, u.completedBugs, u.totalBugs)}</td>
+            <td class="text-center">
+                ${u.isActive
+                    ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>'
+                    : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactive</span>'}
+            </td>
+        </tr>`).join('');
+}
+
+function filterWorkloadTable() {
+    const search = document.getElementById('workloadSearch').value.toLowerCase();
+    const role   = document.getElementById('workloadRoleFilter').value;
+    const filtered = _workloadData.filter(u =>
+        (u.fullName.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)) &&
+        (!role || u.role === role)
+    );
+    renderWorkloadTable(filtered);
+}
+
+async function loadWorkloadTable() {
+    try {
+        _workloadData = await api.get('/users/workload');
+        _workloadData.sort((a, b) => b.activeBugs - a.activeBugs);
+        renderWorkloadTable(_workloadData);
+    } catch (err) {
+        document.getElementById('workloadTableBody').innerHTML =
+            `<tr><td colspan="8" class="text-center text-danger py-4">${utils.escapeHtml(err.message)}</td></tr>`;
+    }
+}
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -155,6 +282,7 @@
                 document.getElementById('recentBugsList').innerHTML =
                     `<tr><td colspan="4" class="text-center text-danger py-4">${utils.escapeHtml(err.message)}</td></tr>`;
             }
+            loadWorkloadTable();
         });
     </script>
 </body>
