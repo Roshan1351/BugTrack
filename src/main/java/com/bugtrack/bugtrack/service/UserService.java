@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
+//business logic for user like create user update user, delete user, deactivate user, get user by id, etc.
 @Service
 @RequiredArgsConstructor
 public class UserService {

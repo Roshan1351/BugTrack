@@ -19,6 +19,7 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
 
+    //add comments in bug which is access by only developer, tester, admin.
     @PostMapping
     @PreAuthorize("hasRole('Developer') or hasRole('Tester') or hasRole('Admin')")
     public ResponseEntity<CommentResponse> addComment(@PathVariable Integer bugId, @Valid @RequestBody CreateCommentRequest request){
@@ -26,6 +27,7 @@ public class CommentController {
 
     }
 
+    //see the comments list by bug id.
     @GetMapping
     @PreAuthorize("hasRole('Developer') or hasRole('Tester') or hasRole('Admin') or hasRole('Project Manager')")
     public ResponseEntity<List<CommentResponse>> getcomments(@PathVariable Integer bugId){

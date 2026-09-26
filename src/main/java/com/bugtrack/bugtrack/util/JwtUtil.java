@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+//all json web token work here
 @Component
 public class JwtUtil {
     @Value("${jwt.secret}")

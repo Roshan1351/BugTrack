@@ -17,7 +17,8 @@ public class AttachmentController {
     @Autowired
     private AttachmentService attachmentService;
 
-    @PostMapping //upload our screenshot
+
+    @PostMapping //upload our screenshot here
     @PreAuthorize("hasRole('Tester') or hasRole('Developer') or hasRole('Admin')")
     public ResponseEntity<AttachmentResponse> uploadAttachment(@PathVariable Integer bugId, @RequestParam("file") MultipartFile file){
         return ResponseEntity.status(HttpStatus.CREATED).body(attachmentService.uploadAttachment(bugId, file));

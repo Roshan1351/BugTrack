@@ -8,12 +8,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+//configuration of web
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Value("${file.upload.dir}")
     private String uploadDir;
 
+    //if path is not created then it creates automatically and store the resource in their path
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();

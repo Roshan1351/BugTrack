@@ -20,6 +20,7 @@ public class FileController {
     @Value("${file.upload.dir}")
     private String uploadDir;
 
+    //upload file properly with extension.
     @GetMapping("/uploads/**")
     public ResponseEntity<Resource> getFile(HttpServletRequest request) {
         try {

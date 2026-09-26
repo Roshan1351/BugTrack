@@ -63,7 +63,7 @@ public class DataIntializer implements CommandLineRunner {
                     new Severity(null, "Major"),
                     new Severity(null, "Blocker")
             ));
-            System.out.println("✅ Severities inserted");
+            System.out.println("Severities inserted");
         }
     }
 

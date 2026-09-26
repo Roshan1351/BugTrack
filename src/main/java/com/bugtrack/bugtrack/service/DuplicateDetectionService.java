@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+
+//duplicate detection service check the duplicate detection percentage means similarity of bug
 @Service
 public class DuplicateDetectionService {
 

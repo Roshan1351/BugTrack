@@ -20,6 +20,7 @@ import java.util.List;
 public class ProjectController {
     public final ProjectService projectService;
 
+    //create project by only admin, and project manager.
     @PostMapping
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')")
     public ResponseEntity<ProjectResponse> createProject(@Valid @RequestBody CreateProjectRequest request){
@@ -27,12 +28,14 @@ public class ProjectController {
                 .body(projectService.createProject(request));
     }
 
+    //get all project list with detail
     @GetMapping
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager') or hasRole('Tester') or hasRole('Developer')")
     public ResponseEntity<List<ProjectResponse>> getAllProjects() {
         return ResponseEntity.ok(projectService.getAllProjects());
     }
 
+    //get project by project id.
     @GetMapping("/{projectId}")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')" +
             " or hasRole('Developer') or hasRole('Tester')")
@@ -43,6 +46,7 @@ public class ProjectController {
         );
     }
 
+    //update status of project
     @PatchMapping("/{projectId}/status")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')")
     public ResponseEntity<ProjectResponse> updateStatus(
@@ -53,7 +57,7 @@ public class ProjectController {
         );
     }
 
-
+    //assign member to project
     @PostMapping("/{projectId}/members")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')")
     public ResponseEntity<ProjectMemberResponse> assignMember(
@@ -64,6 +68,7 @@ public class ProjectController {
                 .body(projectService.assignMember(projectId, request));
     }
 
+    //get members which is currently work in project
     @GetMapping("/{projectId}/members")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')" +
             " or hasRole('Developer') or hasRole('Tester')")
@@ -74,6 +79,7 @@ public class ProjectController {
         );
     }
 
+    //remove any member from project.
     @DeleteMapping("/members/{assignmentId}")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')")
     public ResponseEntity<String> removeMember(

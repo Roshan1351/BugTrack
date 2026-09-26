@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//all project service here such as create project, update project status, getall project, get member which is in project, etc.
 @Service
 public class ProjectService {
     @Autowired

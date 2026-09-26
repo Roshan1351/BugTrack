@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+//all services here related to project create project assign user to project remove user from project, etc.
 @Service
 public class AttachmentService {
     @Autowired

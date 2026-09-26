@@ -3,8 +3,8 @@ package com.bugtrack.bugtrack.util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class StringSimilarityUtil {
-    public int levenshteinDistance(String s1, String s2){ //using dynamic programming...
+public class StringSimilarityUtil { //check the string similarity of bug
+    public int levenshteinDistance(String s1, String s2){ //using dynamic programming (lavinstein algorithm).
         s1= s1.toLowerCase().trim();
         s2= s2.toLowerCase().trim();
 

@@ -10,12 +10,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+
+//special service : workload balancing features here.
 @Service
 @RequiredArgsConstructor
 public class AutoAssignmentService {
     private final ProjectAssignmentRepository projectAssignmentRepository;
     private final BugRepository bugRepository;
 
+    //find the developer who have least load of work means least workload and assigned to developer
     public User findLeastLoadedDeveloper(Integer projectId){
         List<ProjectAssignment> developers= projectAssignmentRepository.findByProject_ProjectIdAndRoleInProject(projectId,ProjectAssignment.ProjectRole.Developer);
         if(developers.isEmpty()){

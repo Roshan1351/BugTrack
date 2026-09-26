@@ -19,11 +19,13 @@ public class AuthController {
 
     private final Authservice authservice;
 
+    //register the user by Admin only
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request){
         return ResponseEntity.ok(authservice.register(request));
     }
 
+    //login user
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request){
         return ResponseEntity.ok(authservice.login(request));

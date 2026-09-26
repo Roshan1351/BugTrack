@@ -16,6 +16,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationController {
     private final NotificationService notificationService;
+
+    //get my notification all user can see their own notification.
     @GetMapping
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')" +
             " or hasRole('Developer') or hasRole('Tester')")
@@ -23,6 +25,7 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getMyNotification());
     }
 
+    //get unread notification which is not read by their own.
     @GetMapping("/unread")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')" +
             " or hasRole('Developer') or hasRole('Tester')")
@@ -30,6 +33,7 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getUnreadNotification());
     }
 
+    //count of notification which is not read
     @GetMapping("/count")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')" +
             " or hasRole('Developer') or hasRole('Tester')")
@@ -37,6 +41,7 @@ public class NotificationController {
         return ResponseEntity.ok(Map.of("unreadCount", notificationService.getUnreadNotificationCount()));
     }
 
+    //marking a notification as read
     @PatchMapping("/{notificationId}/read")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')" +
             " or hasRole('Developer') or hasRole('Tester')")
@@ -45,6 +50,7 @@ public class NotificationController {
         return ResponseEntity.ok("Notification marked as read");
     }
 
+    //marking all notification as read.
     @PatchMapping("/read-all")
     @PreAuthorize("hasRole('Admin') or hasRole('Project Manager')" +
             " or hasRole('Developer') or hasRole('Tester')")

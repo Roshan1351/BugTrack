@@ -9,6 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+//initialize the admin if admin not added in database
 @Component
 public class AdminInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
@@ -27,7 +28,7 @@ public class AdminInitializer implements CommandLineRunner {
     @Value("${Admin_Name}")
     private String FullName;
 
-
+    //run work automatically if we run the application
     @Override
     public void run(String... args) throws Exception {
         if(!userRepository.existsByEmail(AdminEmail)){
