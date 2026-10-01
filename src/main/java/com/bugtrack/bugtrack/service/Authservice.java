@@ -75,4 +75,18 @@ public class Authservice {
                 user.getFullName(), "Login successful"
         );
     }
+
+    public AuthResponse changePassword(com.bugtrack.bugtrack.dto.request.ChangePasswordRequest request){
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getOldPassword()));
+
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(()->new RuntimeException("user not found"));
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return new AuthResponse(
+                null, user.getEmail(), user.getRole().getRoleName(),
+                user.getFullName(), "Password changed successfully"
+        );
+    }
 }
