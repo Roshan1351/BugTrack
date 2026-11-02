@@ -37,7 +37,7 @@ public class SecurityConfig {
         http.csrf(csrf->csrf.disable())
                 .cors(cors->cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth->auth
-
+                        .requestMatchers("/api/auth/register").hasRole("Admin")
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(
@@ -47,13 +47,13 @@ public class SecurityConfig {
                                 "/change-password.html",
                                 "/css/**",
                                 "/js/**",
-                                "/admin/**",
-                                "/developer/**",
-                                "/tester/**",
                                 "/favicon.ico",
                                 "/shared/**",
                                 "/api/auth/**",
-                                "/images/**"
+                                "/images/**",
+                                "/admin/**",
+                                "/tester/**",
+                                "/developer/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
